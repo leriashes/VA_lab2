@@ -111,6 +111,42 @@ bool readFile(vector <vector <double> >& matrix)
 	return result;
 }
 
+//вывод матрицы
+void printMatrix(vector <vector <double> > matrix)
+{
+	int k = matrix.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		for (int j = 0; j < k; j++)
+		{
+			cout << matrix[i][j] << " ";
+		}
+
+		cout << endl;
+	}
+
+	return;
+}
+
+//вывод матрицы в файл
+void fprintMatrix(vector <vector <double> > matrix, ofstream& file)
+{
+	int k = matrix.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		for (int j = 0; j < k; j++)
+		{
+			file << matrix[i][j] << " ";
+		}
+
+		file << endl;
+	}
+
+	return;
+}
+
 //вывод вектора
 void printVector(vector <double> vec)
 {
@@ -122,6 +158,47 @@ void printVector(vector <double> vec)
 	}
 
 	cout << endl;
+
+	return;
+}
+
+//вывод вектора
+void printVector(vector <vector <double> > matrix, int column)
+{
+	for (int i = 0; i < column; i++)
+	{
+		cout << matrix[i][column] << " " << endl;
+	}
+
+	cout << endl;
+
+	return;
+}
+
+//вывод вектора в файл
+void fprintVector(vector <double> vec, ofstream& file)
+{
+	int k = vec.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		file << vec[i] << " " << endl;
+	}
+
+	file << endl;
+
+	return;
+}
+
+//вывод вектора в файл
+void fprintVector(vector <vector <double> > matrix, int column, ofstream& file)
+{
+	for (int i = 0; i < column; i++)
+	{
+		file << matrix[i][column] << " " << endl;
+	}
+
+	file << endl;
 
 	return;
 }
@@ -143,6 +220,7 @@ bool check(vector <vector <double> > matrix)
 	return result;
 }
 
+//проверка условия по точности
 bool isReady(vector <double> x_old, vector <double> x_new, double eps)
 {
 	bool result = false;
@@ -171,7 +249,7 @@ bool isReady(vector <double> x_old, vector <double> x_new, double eps)
 int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double eps)
 {
 	int numberIter = 0;
-	int maxIter = 500;
+	int maxIter = 10000;
 
 	int k = matrix.size();
 
@@ -220,7 +298,7 @@ int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double 
 int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double eps)
 {
 	int numberIter = 0;
-	int maxIter = 50000;
+	int maxIter = 10000;
 
 	int k = matrix.size();
 
@@ -279,6 +357,29 @@ int main()
 		return -1;
 	}
 
+	ofstream result("result.txt");
+	if (!result)
+	{
+		cout << "Не удалось открыть файл для записи результата!" << endl;
+		return -1;
+	}
+
+	k = matrix.size();
+
+	//вывод матрицы A
+	cout << "Матрица A" << endl;
+	printMatrix(matrix);
+
+	result << "Матрица A" << endl;
+	fprintMatrix(matrix, result);
+
+	//вывод вектора B
+	cout << "\nВектор B" << endl;
+	printVector(matrix, k);
+
+	result << "\nВектор B" << endl;
+	fprintVector(matrix, k, result);
+
 	if (check(matrix))
 	{
 		cout << "На главной диагонали есть нули!" << endl;
@@ -287,39 +388,44 @@ int main()
 
 	int numberIter = jacobiSolution(matrix, x1, 0.000001);
 
+	cout << "Метод Якоби" << endl;
+	result << "Метод Якоби" << endl;
+
 	if (numberIter < 0)
 	{
 		cout << "Решение расходится!" << endl;
+		result << "Решение расходится!" << endl;
 	}
 	else
 	{
 		cout << "Количество итераций: " << numberIter << endl;
-
 		cout << "X: " << endl;
-
 		printVector(x1);
+
+		result << "Количество итераций: " << numberIter << endl;
+		result << "X: " << endl;
+		fprintVector(x1, result);
 	}
 
-	numberIter = seidelSolution(matrix, x2, 0.000000001);
+	numberIter = seidelSolution(matrix, x2, 0.0000000001);
+
+	cout << "\nМетод Зейделя" << endl;
+	result << "\nМетод Зейделя" << endl;
 
 	if (numberIter < 0)
 	{
 		cout << "Решение расходится!" << endl;
+		result << "Решение расходится!" << endl;
 	}
 	else
 	{
 		cout << "Количество итераций: " << numberIter << endl;
-
 		cout << "X: " << endl;
-
 		printVector(x2);
-	}
 
-	ofstream result("result.txt");
-	if (!result)
-	{
-		cout << "Не удалось открыть файл для записи результата!" << endl;
-		return -1;
+		result << "Количество итераций: " << numberIter << endl;
+		result << "X: " << endl;
+		fprintVector(x2, result);
 	}
 
 	return 0;
