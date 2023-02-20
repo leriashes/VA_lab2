@@ -220,7 +220,7 @@ int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double 
 int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double eps)
 {
 	int numberIter = 0;
-	int maxIter = 500;
+	int maxIter = 50000;
 
 	int k = matrix.size();
 
@@ -256,7 +256,7 @@ int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double 
 		{
 			break;
 		}
-		if (numberIter == 500)
+		if (numberIter == maxIter)
 		{
 			numberIter = -1;
 		}
@@ -300,7 +300,7 @@ int main()
 		printVector(x1);
 	}
 
-	numberIter = seidelSolution(matrix, x2, 0.000001);
+	numberIter = seidelSolution(matrix, x2, 0.000000001);
 
 	if (numberIter < 0)
 	{
