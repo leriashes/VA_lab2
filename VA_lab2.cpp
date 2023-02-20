@@ -216,6 +216,55 @@ int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double 
 	return numberIter;
 }
 
+//метод Зейделя
+int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double eps)
+{
+	int numberIter = 0;
+	int maxIter = 500;
+
+	int k = matrix.size();
+
+	vector <double> x_old;
+
+	for (int i = 0; i < k; i++)
+	{
+		x.push_back(matrix[i][k] / matrix[i][i]);
+	}
+
+	while (numberIter < maxIter && numberIter >= 0)
+	{
+		x_old = x;
+
+		for (int i = 0; i < k; i++)
+		{
+			double sum = 0;
+
+			for (int j = 0; j < k; j++)
+			{
+				if (i != j)
+				{
+					sum += matrix[i][j] * x[j];
+				}
+			}
+
+			x[i] = (matrix[i][k] - sum) / matrix[i][i];
+		}
+
+		numberIter++;
+
+		if (isReady(x_old, x, eps))
+		{
+			break;
+		}
+		if (numberIter == 500)
+		{
+			numberIter = -1;
+		}
+	}
+
+	return numberIter;
+}
+
 int main()
 {
 	setlocale(LC_ALL, "Rus");
@@ -223,7 +272,7 @@ int main()
 	int k, p;
 
 	vector <vector <double> > matrix;
-	vector <double> x, r;
+	vector <double> x1, x2;
 
 	if (readFile(matrix))
 	{
@@ -236,7 +285,7 @@ int main()
 		return 1;
 	}
 
-	int numberIter = jacobiSolution(matrix, x, 0.000001);
+	int numberIter = jacobiSolution(matrix, x1, 0.000001);
 
 	if (numberIter < 0)
 	{
@@ -248,7 +297,22 @@ int main()
 
 		cout << "X: " << endl;
 
-		printVector(x);
+		printVector(x1);
+	}
+
+	numberIter = seidelSolution(matrix, x2, 0.000001);
+
+	if (numberIter < 0)
+	{
+		cout << "Решение расходится!" << endl;
+	}
+	else
+	{
+		cout << "Количество итераций: " << numberIter << endl;
+
+		cout << "X: " << endl;
+
+		printVector(x2);
 	}
 
 	ofstream result("result.txt");
