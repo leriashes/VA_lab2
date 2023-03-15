@@ -1,8 +1,11 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_RAND_S
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <conio.h>
+#include <stdlib.h>
 using namespace std;
 
 //чтение файла
@@ -108,6 +111,37 @@ void printVector(vector <double> vec)
 	return;
 }
 
+//вывод вектора
+void printVector(vector <vector <double> > matrix, int column)
+{
+	for (int i = 0; i < column; i++)
+	{
+		cout << matrix[i][column] << " " << endl;
+	}
+
+	cout << endl;
+
+	return;
+}
+
+//вывод матрицы
+void printMatrix(vector <vector <double> > matrix)
+{
+	int k = matrix.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		for (int j = 0; j < k; j++)
+		{
+			cout << matrix[i][j] << " ";
+		}
+
+		cout << endl;
+	}
+
+	return;
+}
+
 //проверка на наличие нулей на главной диагонали
 bool check(vector <vector <double> > matrix)
 {
@@ -153,7 +187,7 @@ bool isReady(vector <double> x_old, vector <double> x_new, double eps)
 int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double eps)
 {
 	int numberIter = 0;
-	int maxIter = 500;
+	int maxIter = 50000;
 
 	int k = matrix.size();
 
@@ -181,6 +215,11 @@ int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double 
 			}
 
 			x[i] = (matrix[i][k] - sum) / matrix[i][i];
+
+			if (x[i] != x[i])
+			{
+				numberIter = maxIter - 1;
+			}
 		}
 
 		numberIter++;
@@ -189,7 +228,7 @@ int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double 
 		{
 			break;
 		}
-		if (numberIter == 500)
+		if (numberIter == maxIter)
 		{
 			numberIter = -1;
 		}
@@ -230,6 +269,12 @@ int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double 
 			}
 
 			x[i] = (matrix[i][k] - sum) / matrix[i][i];
+
+			if (x[i] != x[i])
+			{
+				numberIter = maxIter - 1;
+				break;
+			}
 		}
 
 		numberIter++;
@@ -251,24 +296,103 @@ int main()
 {
 	setlocale(LC_ALL, "Rus");
 
-	int k, p;
-	double eps;
+	int n;
+	double eps = 0;
+	char choice;
 
 	vector <vector <double> > matrix;
 	vector <double> x1, x2;
 
-	if (readFile(matrix, eps))
-	{
-		return -1;
-	}
+	cout << "Выберете вариант получения исходных данных: " << endl;
+	cout << "1 - Чтение из файла" << endl;
+	cout << "2 - Автоматическая генерация" << endl << endl;
 
-	if (check(matrix))
+	cout << "Введите номер варианта: ";
+
+	do
 	{
-		cout << "На главной диагонали есть нули!" << endl;
-		return 1;
+		choice = _getch();
+	} while (choice != 49 && choice != 50);
+
+	if (choice == 49)
+	{
+		system("cls");
+
+		cout << "Чтение исходных данных из файла..." << endl;
+
+		if (readFile(matrix, eps))
+		{
+			return -1;
+		}
+
+		cout << "Данные успешно считаны" << endl << endl;
+
+		if (check(matrix))
+		{
+			cout << "На главной диагонали есть нули!" << endl;
+			return 1;
+		}
+	}
+	else
+	{
+		do
+		{
+			system("cls");
+			cout << "Введите количество строк в матрице: ";
+			cin >> n;
+
+		} while (n < 1);
+
+		for (int i = 0; i < n; i++)
+		{
+			double value;
+			matrix.push_back(vector <double>());
+
+			for (int j = 0; j <= n; j++)
+			{
+				unsigned int v1;
+				rand_s(&v1);
+
+				do
+				{
+					value = (int)(((double)v1 / ((double)UINT_MAX + 1) * 100) - 50);
+				} while (i == j && value == 0);
+
+				matrix[i].push_back(value);
+				cout << value << " " ;
+			}
+
+			cout << endl;
+			if (i % 5 == 0)
+			{
+				cout << endl;
+			}
+		}
+
+		do
+		{
+			system("cls");
+			cout << "Введите точность: ";
+			cin >> eps;
+
+		} while (eps <= 0 || eps >= 1);
+
+		system("cls");
+
+		cout << "Сгенерированная матрица: " << endl;
+
+		printMatrix(matrix);
+
+		cout << endl << "Столбец свободных членов: " << endl;
+
+		printVector(matrix, n);
+
+		cout << endl << "Точность: " << eps << endl << endl;
 	}
 
 	int numberIter = jacobiSolution(matrix, x1, eps);
+
+	cout << "Метод Якоби" << endl;
 
 	if (numberIter < 0)
 	{
@@ -284,6 +408,8 @@ int main()
 	}
 
 	numberIter = seidelSolution(matrix, x2, eps);
+
+	cout << endl << "Метод Зейделя" << endl;
 
 	if (numberIter < 0)
 	{
