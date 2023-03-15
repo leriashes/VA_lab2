@@ -6,7 +6,7 @@
 using namespace std;
 
 //чтение файла
-bool readFile(vector <vector <double> >& matrix)
+bool readFile(vector <vector <double> >& matrix, double &eps)
 {
 	int str_start = 0, str_end = 1, str_num = -1;
 	double number;
@@ -56,14 +56,16 @@ bool readFile(vector <vector <double> >& matrix)
 		if (!end)
 		{
 			str_num = 0;
+			number = 0;
+			eps = 0;
 
 			//заполнение столбца свободных членов
-			while (!f.eof() && !end)
+			while (!f.eof() && eps == 0)
 			{
 				f >> number;
 				if (str_num == matrix.size())
 				{
-					end = true;
+					eps = number;
 				}
 				else
 				{
@@ -77,9 +79,6 @@ bool readFile(vector <vector <double> >& matrix)
 				if (matrix[0].size() != matrix[i].size())
 					end = true;
 			}
-
-			if (str_num + 1 != matrix[0].size())
-				end = true;
 		}
 
 		f.close();
@@ -88,23 +87,6 @@ bool readFile(vector <vector <double> >& matrix)
 		{
 			cout << "Неверный формат данных!" << endl;
 			result = true;
-		}
-
-		int k = matrix.size();
-
-		for (int i = 0; i < k; i++)
-		{
-			for (int j = 0; j < k; j++)
-			{
-				if (i == j)
-				{
-					matrix[i].push_back(1);
-				}
-				else
-				{
-					matrix[i].push_back(0);
-				}
-			}
 		}
 	}
 
@@ -270,11 +252,12 @@ int main()
 	setlocale(LC_ALL, "Rus");
 
 	int k, p;
+	double eps;
 
 	vector <vector <double> > matrix;
 	vector <double> x1, x2;
 
-	if (readFile(matrix))
+	if (readFile(matrix, eps))
 	{
 		return -1;
 	}
@@ -285,7 +268,7 @@ int main()
 		return 1;
 	}
 
-	int numberIter = jacobiSolution(matrix, x1, 0.000001);
+	int numberIter = jacobiSolution(matrix, x1, eps);
 
 	if (numberIter < 0)
 	{
@@ -300,7 +283,7 @@ int main()
 		printVector(x1);
 	}
 
-	numberIter = seidelSolution(matrix, x2, 0.000000001);
+	numberIter = seidelSolution(matrix, x2, eps);
 
 	if (numberIter < 0)
 	{
