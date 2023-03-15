@@ -127,6 +127,33 @@ void printVector(vector <vector <double> > matrix, int column)
 	return;
 }
 
+//вывод вектора в файл
+void fprintVector(vector <double> vec, ofstream& file)
+{
+	int k = vec.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		file << vec[i] << " " << endl;
+	}
+
+	file << endl;
+
+	return;
+}
+
+//вывод вектора в файл
+void fprintVector(vector <vector <double> > matrix, int column, ofstream& file)
+{
+	for (int i = 0; i < column; i++)
+	{
+		file << matrix[i][column] << " " << endl;
+	}
+
+	file << endl;
+
+	return;
+}
 
 //вывод матрицы
 void printMatrix(vector <vector <double> > matrix)
@@ -164,37 +191,6 @@ void fprintMatrix(vector <vector <double> > matrix, ofstream& file)
 	return;
 }
 
-
-
-
-
-//вывод вектора в файл
-void fprintVector(vector <double> vec, ofstream& file)
-{
-	int k = vec.size();
-
-	for (int i = 0; i < k; i++)
-	{
-		file << vec[i] << " " << endl;
-	}
-
-	file << endl;
-
-	return;
-}
-
-//вывод вектора в файл
-void fprintVector(vector <vector <double> > matrix, int column, ofstream& file)
-{
-	for (int i = 0; i < column; i++)
-	{
-		file << matrix[i][column] << " " << endl;
-	}
-
-	file << endl;
-
-	return;
-}
 
 //проверка на наличие нулей на главной диагонали
 bool check(vector <vector <double> > matrix)
@@ -238,6 +234,43 @@ bool isReady(vector <double> x_old, vector <double> x_new, double eps)
 	return result;
 }
 
+//определение невязок
+vector <double> residual(vector <vector <double> > matrix, vector <double> x)
+{
+	vector <double> r;
+	int k = matrix.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		r.push_back(matrix[i][k]);
+
+		for (int j = 0; j < k; j++)
+		{
+			r[i] -= matrix[i][j] * x[j];
+		}
+	}
+
+	return r;
+}
+
+//определение нормы
+double norma(vector<double> vec)
+{
+	double n = fabs(vec[0]);
+	int k = vec.size();
+
+	for (int i = 1; i < k; i++)
+	{
+		if (fabs(vec[i]) > n)
+		{
+			n = fabs(vec[i]);
+		}
+	}
+
+	return n;
+}
+
+
 //метод Якоби
 int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double eps)
 {
@@ -271,7 +304,7 @@ int jacobiSolution(vector <vector <double> > matrix, vector <double> &x, double 
 
 			x[i] = (matrix[i][k] - sum) / matrix[i][i];
 
-			if (x[i] != x[i])
+			if (x[i] != x[i] || x[i] == INFINITY)
 			{
 				numberIter = maxIter - 1;
 			}
@@ -325,7 +358,7 @@ int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double 
 
 			x[i] = (matrix[i][k] - sum) / matrix[i][i];
 
-			if (x[i] != x[i])
+			if (x[i] != x[i] || x[i] == INFINITY)
 			{
 				numberIter = maxIter - 1;
 				break;
@@ -347,16 +380,17 @@ int seidelSolution(vector <vector <double> > matrix, vector <double>& x, double 
 	return numberIter;
 }
 
+
 int main()
 {
 	setlocale(LC_ALL, "Rus");
 
 	int n;
-	double eps = 0;
+	double eps = 0, nor;
 	char choice;
 
 	vector <vector <double> > matrix;
-	vector <double> x1, x2;
+	vector <double> x1, x2, r;
 
 	cout << "Выберете вариант получения исходных данных: " << endl;
 	cout << "1 - Чтение из файла" << endl;
@@ -410,45 +444,10 @@ int main()
 
 				do
 				{
-					value = (int)(((double)v1 / ((double)UINT_MAX + 1) * 100) - 50);
+					value = (int)(((double)v1 / ((double)UINT_MAX + 1) * 50) - 15);
 				} while (i == j && value == 0);
 
-				matrix[i].push_back(value);
-				cout << value << " " ;
-			}
-	ofstream result("result.txt");
-	if (!result)
-	{
-		cout << "Не удалось открыть файл для записи результата!" << endl;
-		return -1;
-	}
-
-	k = matrix.size();
-
-	//вывод матрицы A
-	cout << "Матрица A" << endl;
-	printMatrix(matrix);
-
-	result << "Матрица A" << endl;
-	fprintMatrix(matrix, result);
-
-	//вывод вектора B
-	cout << "\nВектор B" << endl;
-	printVector(matrix, k);
-
-	result << "\nВектор B" << endl;
-	fprintVector(matrix, k, result);
-
-	if (check(matrix))
-	{
-		cout << "На главной диагонали есть нули!" << endl;
-		return 1;
-	}
-
-			cout << endl;
-			if (i % 5 == 0)
-			{
-				cout << endl;
+				matrix[i].push_back(value * (1 + (n - 1) * (i == j)));
 			}
 		}
 
@@ -461,21 +460,36 @@ int main()
 		} while (eps <= 0 || eps >= 1);
 
 		system("cls");
-
-		cout << "Сгенерированная матрица: " << endl;
-
-		printMatrix(matrix);
-
-		cout << endl << "Столбец свободных членов: " << endl;
-
-		printVector(matrix, n);
-
-		cout << endl << "Точность: " << eps << endl << endl;
 	}
 
-	int numberIter = jacobiSolution(matrix, x1, eps);
+	ofstream result("result.txt");
+	if (!result)
+	{
+		cout << "Не удалось открыть файл для записи результата!" << endl;
+		return -1;
+	}
 
-	cout << "Метод Якоби" << endl;
+	n = matrix.size();
+
+
+	//вывод матрицы A
+	cout << "Матрица A" << endl;
+	printMatrix(matrix);
+
+	result << "Матрица A" << endl;
+	fprintMatrix(matrix, result);
+
+	//вывод вектора B
+	cout << "\nВектор B" << endl;
+	printVector(matrix, n);
+
+	result << "\nВектор B" << endl;
+	fprintVector(matrix, n, result);
+
+	cout << endl << "Точность: " << eps << endl << endl;
+	result << endl << "Точность: " << eps << endl << endl;
+
+	int numberIter = jacobiSolution(matrix, x1, eps);
 
 	cout << "Метод Якоби" << endl;
 	result << "Метод Якоби" << endl;
@@ -494,11 +508,22 @@ int main()
 		result << "Количество итераций: " << numberIter << endl;
 		result << "X: " << endl;
 		fprintVector(x1, result);
+
+		r = residual(matrix, x1);
+
+		cout << "Невязки: " << endl;
+		printVector(r);
+
+		result << "Невязки: " << endl;
+		fprintVector(r, result);
+
+		nor = norma(r);
+
+		cout << "Норма невязок: " << nor << endl << endl;
+		result << "Норма невязок: " << nor << endl << endl;
 	}
 
 	numberIter = seidelSolution(matrix, x2, eps);
-
-	cout << endl << "Метод Зейделя" << endl;
 
 	cout << "\nМетод Зейделя" << endl;
 	result << "\nМетод Зейделя" << endl;
@@ -517,6 +542,19 @@ int main()
 		result << "Количество итераций: " << numberIter << endl;
 		result << "X: " << endl;
 		fprintVector(x2, result);
+
+		r = residual(matrix, x2);
+
+		cout << "Невязки: " << endl;
+		printVector(r);
+
+		result << "Невязки: " << endl;
+		fprintVector(r, result);
+
+		nor = norma(r);
+
+		cout << "Норма невязок: " << nor << endl << endl;
+		result << "Норма невязок: " << nor << endl << endl;
 	}
 
 	return 0;
