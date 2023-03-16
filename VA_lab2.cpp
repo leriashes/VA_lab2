@@ -445,7 +445,7 @@ int main()
 				do
 				{
 					value = (int)(((double)v1 / ((double)UINT_MAX + 1) * 50) - 15);
-				} while (i == j && value == 0);
+				} while (i == j || value == 0);
 
 				matrix[i].push_back(value * (1 + (n - 1) * (i == j)));
 			}
